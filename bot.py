@@ -826,10 +826,10 @@ class AquaFlux:
             for i in range(self.mint_count):
                 self.log(
                     f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.CYAN+Style.BRIGHT}Mint{Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT} {i+1} {Style.RESET_ALL}"
-                    f"{Fore.CYAN+Style.BRIGHT}Of{Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT} {self.mint_count} {Style.RESET_ALL}                                   "
+                    f"{Fore.CYAN+Style.BRIGHT} Mint {Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT}{i+1}{Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT} Of {Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT}{self.mint_count}{Style.RESET_ALL}                                   "
                 )
 
                 for nft_option in ["Standard NFT", "Premium NFT"]:
