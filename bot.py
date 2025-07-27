@@ -840,7 +840,7 @@ class AquaFlux:
 
                     if nft_option == "Premium NFT":
                         binding = await self.check_binding_status(address, use_proxy)
-                        if not binding: return
+                        if not binding: continue
                         
                         is_bound = binding.get("data", {}).get("bound")
                         if is_bound == False:
@@ -848,7 +848,7 @@ class AquaFlux:
                                 f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
                                 f"{Fore.YELLOW+Style.BRIGHT} Not Eligible, Bind Your Twitter First {Style.RESET_ALL}"
                             )
-                            return
+                            continue
 
                         has_claimed = await self.check_nft_status(address, nft_option, use_proxy)
                         if has_claimed:
@@ -856,15 +856,15 @@ class AquaFlux:
                                 f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
                                 f"{Fore.YELLOW+Style.BRIGHT} {nft_option} Already Minted {Style.RESET_ALL}"
                             )
-                            return
+                            continue
 
                     is_claimed = await self.process_perform_claim_tokens(account, address, use_proxy)
-                    if not is_claimed: return
+                    if not is_claimed: continue
                     
                     await self.print_timer()
 
                     is_combined = await self.process_perform_combine_tokens(account, address, use_proxy)
-                    if not is_combined: return
+                    if not is_combined: continue
                     
                     await self.print_timer()
 
