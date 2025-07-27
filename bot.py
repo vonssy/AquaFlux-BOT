@@ -644,7 +644,12 @@ class AquaFlux:
             
             return False
     
-    async def process_perform_claim_tokens(self, account: str, address: str, use_proxy: bool):
+    async def process_perform_claim_tokens(self, account: str, address: str, use_proxy: bool):    
+        self.log(
+            f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
+            f"{Fore.BLUE+Style.BRIGHT} Claim Tokens {Style.RESET_ALL}                                   "
+        )
+
         tx_hash, block_number = await self.perform_claim_tokens(account, address, use_proxy)
         if tx_hash and block_number:
             explorer = f"https://testnet.pharosscan.xyz/tx/{tx_hash}"
@@ -675,6 +680,11 @@ class AquaFlux:
         return False
 
     async def process_perform_combine_tokens(self, account: str, address: str, use_proxy: bool):
+        self.log(
+            f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
+            f"{Fore.BLUE+Style.BRIGHT} Combine Tokens {Style.RESET_ALL}                                   "
+        )
+
         holdings = await self.check_token_holdings(address, use_proxy)
         if holdings:
             is_holdings = holdings.get("data", {}).get("isHoldingToken")
@@ -708,8 +718,7 @@ class AquaFlux:
                     holdings = await self.check_token_holdings(address, use_proxy)
                     if holdings:
                         is_holdings = holdings.get("data", {}).get("isHoldingToken")
-                        if is_holdings == True:
-                            return True
+                        if is_holdings == True: return True
                     
                     self.log(
                         f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
@@ -734,37 +743,35 @@ class AquaFlux:
         return False
 
     async def process_perform_mint_nft(self, account: str, address: str, nft_option: str, use_proxy: bool):
-        has_claimed = await self.check_nft_status(address, nft_option, use_proxy)
-        if not has_claimed:
-            tx_hash, block_number = await self.perform_mint_nft(account, address, nft_option, use_proxy)
-            if tx_hash and block_number:
-                explorer = f"https://testnet.pharosscan.xyz/tx/{tx_hash}"
+        self.log(
+            f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
+            f"{Fore.BLUE+Style.BRIGHT} Mint NFT {Style.RESET_ALL}                                   "
+        )
+        
+        tx_hash, block_number = await self.perform_mint_nft(account, address, nft_option, use_proxy)
+        if tx_hash and block_number:
+            explorer = f"https://testnet.pharosscan.xyz/tx/{tx_hash}"
 
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
-                    f"{Fore.GREEN+Style.BRIGHT} Mint {nft_option} Success {Style.RESET_ALL}"
-                )
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}    Block   :{Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}"
-                )
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}    Tx Hash :{Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}"
-                )
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}    Explorer:{Style.RESET_ALL}"
-                    f"{Fore.WHITE+Style.BRIGHT} {explorer} {Style.RESET_ALL}"
-                )
-            else:
-                self.log(
-                    f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
-                    f"{Fore.RED+Style.BRIGHT} Perform On-Chain Failed {Style.RESET_ALL}"
-                )
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
+                f"{Fore.GREEN+Style.BRIGHT} Mint {nft_option} Success {Style.RESET_ALL}"
+            )
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}    Block   :{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {block_number} {Style.RESET_ALL}"
+            )
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}    Tx Hash :{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {tx_hash} {Style.RESET_ALL}"
+            )
+            self.log(
+                f"{Fore.CYAN+Style.BRIGHT}    Explorer:{Style.RESET_ALL}"
+                f"{Fore.WHITE+Style.BRIGHT} {explorer} {Style.RESET_ALL}"
+            )
         else:
             self.log(
                 f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
-                f"{Fore.YELLOW+Style.BRIGHT} {nft_option} Already Minted {Style.RESET_ALL}"
+                f"{Fore.RED+Style.BRIGHT} Perform On-Chain Failed {Style.RESET_ALL}"
             )
 
     async def process_accounts(self, account: str, address: str, use_proxy: bool, rotate_proxy: bool):
@@ -788,8 +795,7 @@ class AquaFlux:
 
                 if nft_option == "Premium NFT":
                     binding = await self.check_binding_status(address, use_proxy)
-                    if not binding:
-                        return
+                    if not binding: return
                     
                     is_bound = binding.get("data", {}).get("bound")
                     if is_bound == False:
@@ -799,32 +805,23 @@ class AquaFlux:
                         )
                         return
 
-                self.log(
-                    f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.BLUE+Style.BRIGHT} Claim Tokens {Style.RESET_ALL}                                   "
-                )
+                    has_claimed = await self.check_nft_status(address, nft_option, use_proxy)
+                    if has_claimed:
+                        self.log(
+                            f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
+                            f"{Fore.YELLOW+Style.BRIGHT} {nft_option} Already Minted {Style.RESET_ALL}"
+                        )
+                        return
 
                 is_claimed = await self.process_perform_claim_tokens(account, address, use_proxy)
-                if not is_claimed:
-                    return
+                if not is_claimed: return
                 
                 await self.print_timer()
-                
-                self.log(
-                    f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.BLUE+Style.BRIGHT} Combine Tokens {Style.RESET_ALL}                                   "
-                )
 
                 is_combined = await self.process_perform_combine_tokens(account, address, use_proxy)
-                if not is_combined:
-                    return
+                if not is_combined: return
                 
                 await self.print_timer()
-
-                self.log(
-                    f"{Fore.GREEN+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.BLUE+Style.BRIGHT} Mint NFT {Style.RESET_ALL}                                   "
-                )
 
                 await self.process_perform_mint_nft(account, address, nft_option, use_proxy)
                 await self.print_timer()
