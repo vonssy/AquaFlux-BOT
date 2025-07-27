@@ -101,6 +101,9 @@ class AquaFlux:
         self.account_proxies = {}
         self.access_tokens = {}
         self.used_nonce = {}
+        self.mint_count = 0
+        self.min_delay = 0
+        self.max_delay = 0
 
     def clear_terminal(self):
         os.system('cls' if os.name == 'nt' else 'clear')
@@ -434,7 +437,7 @@ class AquaFlux:
             return None, None
         
     async def print_timer(self):
-        for remaining in range(random.randint(5, 10), 0, -1):
+        for remaining in range(random.randint(self.min_delay, self.max_delay), 0, -1):
             print(
                 f"{Fore.CYAN + Style.BRIGHT}[ {datetime.now().astimezone(wib).strftime('%x %X %Z')} ]{Style.RESET_ALL}"
                 f"{Fore.WHITE + Style.BRIGHT} | {Style.RESET_ALL}"
@@ -447,6 +450,39 @@ class AquaFlux:
             await asyncio.sleep(1)
 
     def print_question(self):
+        while True:
+            try:
+                mint_count = int(input(f"{Fore.YELLOW + Style.BRIGHT}Enter Mint NFT Count For Each Wallets -> {Style.RESET_ALL}").strip())
+                if mint_count > 0:
+                    self.mint_count = mint_count
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Please enter positive number.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+
+        while True:
+            try:
+                min_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}Min Delay Each Tx -> {Style.RESET_ALL}").strip())
+                if min_delay >= 0:
+                    self.min_delay = min_delay
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Min Delay must be >= 0.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+
+        while True:
+            try:
+                max_delay = int(input(f"{Fore.YELLOW + Style.BRIGHT}Max Delay Each Tx -> {Style.RESET_ALL}").strip())
+                if max_delay >= min_delay:
+                    self.max_delay = max_delay
+                    break
+                else:
+                    print(f"{Fore.RED + Style.BRIGHT}Min Delay must be >= Min Delay.{Style.RESET_ALL}")
+            except ValueError:
+                print(f"{Fore.RED + Style.BRIGHT}Invalid input. Enter a number.{Style.RESET_ALL}")
+
         while True:
             try:
                 print(f"{Fore.WHITE + Style.BRIGHT}1. Run With Free Proxyscrape Proxy{Style.RESET_ALL}")
@@ -787,44 +823,54 @@ class AquaFlux:
             
             self.used_nonce[address] = web3.eth.get_transaction_count(address, "pending")
 
-            for nft_option in ["Standard NFT", "Premium NFT"]:
+            for i in range(self.mint_count):
                 self.log(
                     f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
-                    f"{Fore.GREEN+Style.BRIGHT} {nft_option} {Style.RESET_ALL}                                   "
+                    f"{Fore.CYAN+Style.BRIGHT}Mint{Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT} {i+1} {Style.RESET_ALL}"
+                    f"{Fore.CYAN+Style.BRIGHT}Of{Style.RESET_ALL}"
+                    f"{Fore.WHITE+Style.BRIGHT} {self.mint_count} {Style.RESET_ALL}                                   "
                 )
 
-                if nft_option == "Premium NFT":
-                    binding = await self.check_binding_status(address, use_proxy)
-                    if not binding: return
+                for nft_option in ["Standard NFT", "Premium NFT"]:
+                    self.log(
+                        f"{Fore.MAGENTA+Style.BRIGHT} ● {Style.RESET_ALL}"
+                        f"{Fore.GREEN+Style.BRIGHT} {nft_option} {Style.RESET_ALL}                                   "
+                    )
+
+                    if nft_option == "Premium NFT":
+                        binding = await self.check_binding_status(address, use_proxy)
+                        if not binding: return
+                        
+                        is_bound = binding.get("data", {}).get("bound")
+                        if is_bound == False:
+                            self.log(
+                                f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
+                                f"{Fore.YELLOW+Style.BRIGHT} Not Eligible, Bind Your Twitter First {Style.RESET_ALL}"
+                            )
+                            return
+
+                        has_claimed = await self.check_nft_status(address, nft_option, use_proxy)
+                        if has_claimed:
+                            self.log(
+                                f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
+                                f"{Fore.YELLOW+Style.BRIGHT} {nft_option} Already Minted {Style.RESET_ALL}"
+                            )
+                            return
+
+                    is_claimed = await self.process_perform_claim_tokens(account, address, use_proxy)
+                    if not is_claimed: return
                     
-                    is_bound = binding.get("data", {}).get("bound")
-                    if is_bound == False:
-                        self.log(
-                            f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
-                            f"{Fore.YELLOW+Style.BRIGHT} Not Eligible, Bind Your Twitter First {Style.RESET_ALL}"
-                        )
-                        return
+                    await self.print_timer()
 
-                    has_claimed = await self.check_nft_status(address, nft_option, use_proxy)
-                    if has_claimed:
-                        self.log(
-                            f"{Fore.CYAN+Style.BRIGHT}    Status  :{Style.RESET_ALL}"
-                            f"{Fore.YELLOW+Style.BRIGHT} {nft_option} Already Minted {Style.RESET_ALL}"
-                        )
-                        return
+                    is_combined = await self.process_perform_combine_tokens(account, address, use_proxy)
+                    if not is_combined: return
+                    
+                    await self.print_timer()
 
-                is_claimed = await self.process_perform_claim_tokens(account, address, use_proxy)
-                if not is_claimed: return
-                
-                await self.print_timer()
-
-                is_combined = await self.process_perform_combine_tokens(account, address, use_proxy)
-                if not is_combined: return
-                
-                await self.print_timer()
-
-                await self.process_perform_mint_nft(account, address, nft_option, use_proxy)
-                await self.print_timer()
+                    await self.process_perform_mint_nft(account, address, nft_option, use_proxy)
+                    
+                    await self.print_timer()
             
     async def main(self):
         try:
